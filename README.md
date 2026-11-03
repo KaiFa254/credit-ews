@@ -37,4 +37,5 @@ This is a *delinquency* target, not default (default means 90+ DPD).
 - [x] Lesson 1 — Project folder, environment, Git, target decision
 - [X] Lesson 2 — Dependencies
 - [x] Lesson 3 — Folder structure and config.yaml (grain: customer × month)
-- [ ] Lesson 4 — Python package, verification script, first tests
+- [x] Lesson 4 — ews package, config loader, verification script, first tests (6 passing)
+- [ ] Stage 2 — Synthetic data generation
