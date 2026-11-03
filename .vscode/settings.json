@@ -1,4 +1,8 @@
+// .vscode/settings.json — VS Code settings for THIS project only (VS Code allows // comments here).
 {
+    // Use conda to find, create and activate environments (our env: credit-ews)
     "python-envs.defaultEnvManager": "ms-python.python:conda",
-    "python-envs.defaultPackageManager": "ms-python.python:conda"
+
+    // Install packages with pip, so they match requirements.txt (our single list of packages)
+    "python-envs.defaultPackageManager": "ms-python.python:pip"
 }

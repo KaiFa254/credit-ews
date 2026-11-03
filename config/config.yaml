@@ -1,0 +1,64 @@
+# =====================================================================
+# config/config.yaml — central settings for the Credit EWS project.
+#
+# WHAT:  Every important parameter: seed, paths, data size, target,
+#        split dates, monitoring thresholds.
+# WHY:   Change a setting in ONE place; reviewers see every modelling
+#        choice at a glance. Code never hardcodes these values.
+# USAGE: Python reads this file (Lesson 4):
+#            cfg = load_config()
+#            cfg["target"]["dpd_threshold"]      # -> 30
+# RULES: 2-space indentation, no tabs. Lines starting with # are comments.
+# =====================================================================
+
+# --- Project identity ----------------------------------------------------
+project:
+  name: credit-ews
+  version: 0.1.0
+  random_seed: 42                 # ONE seed drives every random step -> identical data and results on any machine
+
+# --- Where things live (relative to the project folder) -----------------
+paths:
+  raw_data: data/raw              # source extracts (empty: our data is synthetic)
+  synthetic_data: data/synthetic  # generator output (Stage 2)
+  processed_data: data/processed  # model-ready tables (Stage 5)
+  models: artifacts/models        # saved models (Stage 6)
+  reports: artifacts/reports      # charts and reports (Stage 3 onward)
+  database: artifacts/ews_monitoring.db   # SQLite monitoring data mart (Stage 10)
+
+# --- Synthetic data size (Stage 2) --------------------------------------
+synthetic_data:
+  n_customers: 5000               # small for quick learning runs; raise to 40000 for the full build
+  start_month: "2023-01-31"       # first month-end snapshot (quoted so YAML keeps it as text)
+  n_months: 36                    # Jan 2023 – Dec 2025: 12 months of history + labelled months + unlabelled tail
+  segments: ["250", "270"]        # CSME business segments being mirrored (quoted: codes, not numbers)
+  n_relationship_managers: 40     # RMs who receive the alert emails (fictitious names and emails)
+
+# --- Prediction target (decided: TARGET_DPD30_90D) ----------------------
+target:
+  name: TARGET_DPD30_90D          # a DELINQUENCY target, not "default" (default = 90+ DPD)
+  dpd_threshold: 30               # bad (1) = reaches DPD >= 30 ...
+  horizon_days: 90                # ... at any point within the next 90 days
+  horizon_months: 3               # 90 days ~ 3 month-end snapshots -> the last 3 months have no outcome yet
+  max_dpd_at_snapshot: 5          # population: current or near-current (DPD <= 5) at the snapshot
+  grain: customer_month           # one row per customer per month-end (to confirm at the start of Stage 2)
+
+# --- Features --------------------------------------------------------
+features:
+  lookback_months: 12             # rolling windows use at most 12 months of history before each snapshot
+
+# --- Chronological splits (Stage 7): never random --------------------
+# Snapshots before Dec 2023 lack 12 months of history; snapshots after Sep 2025 lack a 90-day outcome.
+splits:
+  first_usable_snapshot: "2023-12-31"   # first month with a full 12-month lookback
+  train_end: "2025-03-31"               # TRAIN:      Dec 2023 – Mar 2025 (16 months)
+  validation_end: "2025-06-30"          # VALIDATION: Apr – Jun 2025 (tune and compare models)
+  test_end: "2025-09-30"                # TEST:       Jul – Sep 2025 (out-of-time, touched once at the end)
+                                        # Oct – Dec 2025: unlabelled -> used to practise scoring and drift monitoring
+
+# --- Monitoring (Stage 11): ILLUSTRATIVE values, need model-specific approval ---
+monitoring:
+  psi_bins: 10                    # number of fixed bins from the training baseline
+  psi_amber: 0.10                 # PSI 0.10–0.25 -> investigate
+  psi_red: 0.25                   # PSI above 0.25 -> significant shift, escalate
+  max_missing_rate: 0.10          # alert if a feature is more than 10% missing

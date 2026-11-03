@@ -36,4 +36,5 @@ This is a *delinquency* target, not default (default means 90+ DPD).
 <!-- [x] = done, [ ] = to do. Tick one box per lesson. -->
 - [x] Lesson 1 — Project folder, environment, Git, target decision
 - [X] Lesson 2 — Dependencies
-- [ ] Lesson 3 — Folder structure and config
+- [x] Lesson 3 — Folder structure and config.yaml (grain: customer × month)
+- [ ] Lesson 4 — Python package, verification script, first tests
