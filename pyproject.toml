@@ -1,0 +1,30 @@
+# =====================================================================
+# pyproject.toml — describes our project so pip can install it,
+# plus settings for tools (pytest, ruff).
+# TOML format: [section] headers, key = "value" lines, # comments.
+# =====================================================================
+
+# --- How to build the package (setuptools is the standard builder) ---
+[build-system]
+requires = ["setuptools>=68"]              # tool needed to build/install the package
+build-backend = "setuptools.build_meta"   # which part of setuptools does the work
+
+# --- About our project ---
+[project]
+name = "credit-ews"                        # the installable project's name
+version = "0.1.0"                          # keep in sync with ews.__version__
+description = "Credit Early Warning System: 30+ DPD within 90 days, synthetic CSME portfolio"
+requires-python = ">=3.12"                 # refuse to install on older Python (e.g. your 3.10 work env)
+
+# --- Where the code lives: look for packages inside src/ (the "src layout") ---
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# --- pytest settings (used in Lesson 4B) ---
+[tool.pytest.ini_options]
+testpaths = ["tests"]                      # look for tests only in tests/
+addopts = "-q"                             # quiet output: one dot per passing test
+
+# --- ruff (code checker) settings ---
+[tool.ruff]
+line-length = 100                          # allow lines up to 100 characters

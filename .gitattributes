@@ -1,0 +1,10 @@
+# =====================================================================
+# .gitattributes — tells Git how to handle files (here: line endings).
+# WHY: Windows uses CRLF line endings, Linux/GitHub use LF. Mixing them
+#      causes noisy diffs and "LF will be replaced by CRLF" warnings.
+# =====================================================================
+
+* text=auto eol=lf        # all text files: detect automatically, always use LF endings
+*.bat text eol=crlf       # exception: Windows batch files must keep CRLF to run correctly
+*.png binary              # images are binary: never touch their bytes
+*.pbix binary             # Power BI files are binary too
