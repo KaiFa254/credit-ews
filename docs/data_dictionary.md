@@ -74,7 +74,7 @@ PK: `CUSTOMER_ID` · FK: `RM_ID` → relationship_managers
 | TOWN | text | town list | STATIC | Business town |
 | AGE | integer | 21–75 | PROTECTED | Owner/main director age at Jan 2023 |
 | GENDER | text | M, F | PROTECTED | Owner/main director gender |
-| CUSTOMER_SINCE | date | 2005-01-01 to 2023-12-31 | STATIC | Relationship start date |
+| | CUSTOMER_SINCE | date | 2005-01-01 to 2023-01-31 | STATIC | Relationship start date (all customers exist at the first snapshot) |start date |
 | BUSINESS_YEARS | integer | 0–40 | STATIC | Years the business has operated (at Jan 2023) |
 | DECLARED_MONTHLY_INCOME | number (KES) | > 0 | STATIC | Income declared at onboarding |
 
