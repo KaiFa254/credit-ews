@@ -6,6 +6,12 @@
     // Install packages with pip, so they match requirements.txt
     "python-envs.defaultPackageManager": "ms-python.python:pip",
 
-    // Save files with LF line endings, matching .gitattributes (no more CRLF warnings)
-    "files.eol": "\n"
+    // Save files with LF line endings, matching .gitattributes
+    "files.eol": "\n",
+
+    // Hide auto-generated cache folders from the Explorer view (Git already ignores them)
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.pytest_cache": true
+    }
 }
