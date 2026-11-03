@@ -1,8 +1,11 @@
-// .vscode/settings.json — VS Code settings for THIS project only (VS Code allows // comments here).
+// .vscode/settings.json — VS Code settings for THIS project only
 {
     // Use conda to find, create and activate environments (our env: credit-ews)
     "python-envs.defaultEnvManager": "ms-python.python:conda",
 
-    // Install packages with pip, so they match requirements.txt (our single list of packages)
-    "python-envs.defaultPackageManager": "ms-python.python:pip"
+    // Install packages with pip, so they match requirements.txt
+    "python-envs.defaultPackageManager": "ms-python.python:pip",
+
+    // Save files with LF line endings, matching .gitattributes (no more CRLF warnings)
+    "files.eol": "\n"
 }
