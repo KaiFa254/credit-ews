@@ -1,0 +1,61 @@
+# =====================================================================
+# requirements.txt — third-party Python packages used by this project.
+#
+# WHAT:  Each line names a package and the versions this project supports.
+# WHY:   Keeping dependencies here makes setup repeatable across machines.
+# SETUP: Activate your project environment, then run: pip install -r requirements.txt
+#        Run that command again after adding or changing a package below.
+#
+# These are version ranges, not exact pins or a lock file: pip chooses a
+# compatible version when installing, so separate installs may differ.
+# Version syntax:  >=2.2    version 2.2 or newer
+#                  <3.0     older than 3.0 (avoids unreviewed major upgrades)
+# Target Python:   3.12 (use a Python 3.12 environment for this project)
+# =====================================================================
+
+# --- Core data handling ------------------------------------------------
+# Load project settings and work with the tables and numerical data used
+# throughout data preparation, analysis, and model training.
+numpy>=1.26,<3.0          # fast numeric arrays — the engine under pandas and sklearn
+pandas>=2.2,<3.0          # tables (DataFrames): loading, joining, aggregating — like your SQL in Python
+pyyaml>=6.0               # reads config/config.yaml (our settings file, Lesson 3)
+
+# --- Visualisation (EDA, validation charts) ---------------------------
+# Create exploratory plots and charts for checking data and model results.
+matplotlib>=3.8           # core plotting library: ROC curves, histograms
+seaborn>=0.13             # nicer statistical plots on top of matplotlib (distributions, heatmaps)
+
+# --- Modelling --------------------------------------------------------
+# Prepare and train credit-risk models, measure their performance, explain
+# predictions, and save/load fitted pipelines.
+scikit-learn>=1.5,<1.8    # pipelines, preprocessing, Logistic Regression, Random Forest, metrics
+xgboost>=2.1              # gradient boosting: usually the strongest model on tabular credit data
+lightgbm>=4.3             # alternative fast gradient boosting model (challenger)
+optbinning>=0.19          # WOE / optimal binning scorecards, as in your NCBA notebook
+shap>=0.46                # explains each prediction: "why was this customer flagged?"
+joblib>=1.4               # saves and loads trained model pipelines to and from disk
+
+# --- Data validation --------------------------------------------------
+# Check input data against expected schemas and business rules before use.
+pandera>=0.20             # declarative data checks: allowed values, ranges, no duplicates
+
+# --- Database (monitoring data mart, Stage 10) ------------------------
+# Connect to the monitoring database through a consistent Python interface.
+sqlalchemy>=2.0           # one interface for SQLite now and SQL Server later, same code
+
+# --- Optional scoring API (Stage 9) -----------------------------------
+# Only needed when running the HTTP endpoint that scores individual
+# customers; not required for notebook-only model development.
+fastapi>=0.110            # web API to score a single customer on request
+uvicorn>=0.29             # the server that runs the FastAPI app
+
+# --- Notebooks --------------------------------------------------------
+# Interactive analysis tools, including support for running notebooks in VS Code.
+jupyter>=1.0              # Jupyter notebooks
+ipykernel>=6.29           # lets VS Code notebooks run on this conda environment
+
+# --- Testing and code quality -----------------------------------------
+# Run the automated tests, measure test coverage, and check code style/issues.
+pytest>=8.0               # runs automated tests (Lesson 4)
+pytest-cov>=5.0           # reports how much of the code the tests cover
+ruff>=0.5                 # linter: flags bugs, unused imports, style issues

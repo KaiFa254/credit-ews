@@ -35,5 +35,5 @@ This is a *delinquency* target, not default (default means 90+ DPD).
 ## Progress
 <!-- [x] = done, [ ] = to do. Tick one box per lesson. -->
 - [x] Lesson 1 — Project folder, environment, Git, target decision
-- [ ] Lesson 2 — Dependencies
+- [X] Lesson 2 — Dependencies
 - [ ] Lesson 3 — Folder structure and config
