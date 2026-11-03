@@ -4,7 +4,7 @@
     "python-envs.defaultEnvManager": "ms-python.python:conda",
 
     // Install packages with pip, so they match requirements.txt
-    "python-envs.defaultPackageManager": "ms-python.python:pip",
+    "python-envs.defaultPackageManager": "ms-python.python:conda",
 
     // Save files with LF line endings, matching .gitattributes
     "files.eol": "\n",
