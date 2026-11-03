@@ -1,5 +1,0 @@
-Metadata-Version: 2.4
-Name: credit-ews
-Version: 0.1.0
-Summary: Credit Early Warning System: 30+ DPD within 90 days, synthetic CSME portfolio
-Requires-Python: >=3.12

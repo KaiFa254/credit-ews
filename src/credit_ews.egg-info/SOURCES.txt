@@ -1,8 +1,0 @@
-README.md
-pyproject.toml
-src/credit_ews.egg-info/PKG-INFO
-src/credit_ews.egg-info/SOURCES.txt
-src/credit_ews.egg-info/dependency_links.txt
-src/credit_ews.egg-info/top_level.txt
-src/ews/__init__.py
-src/ews/config.py
