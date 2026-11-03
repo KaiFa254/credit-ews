@@ -6,12 +6,13 @@
            (Stage 3), validation (Stage 4) and features (Stage 5).
      RULE: if the generator changes a column, update this file in the
            SAME commit, so documentation never goes stale.
+     LAST UPDATED: Lesson 7 (loans and loan_monthly).
      ================================================================== -->
 
 # Data Dictionary — Synthetic CSME Early Warning Data
 
 > All data is **synthetic** (fictitious): no real customers, RMs or emails.
-> The generator writes CSV files to `data/synthetic/`.
+> The generator (`python scripts/generate_data.py`) writes CSV files to `data/synthetic/`.
 > Snapshots are month-end **extraction ("as at") dates**, Jan 2023 – Dec 2025 (36 months).
 
 ## How to read this document
@@ -32,17 +33,17 @@
 
 ## Table overview
 
-| # | Table | Grain (one row =) | Primary key |
-|---|---|---|---|
-| 1 | relationship_managers | one RM | RM_ID |
-| 2 | customers | one customer | CUSTOMER_ID |
-| 3 | loans | one loan (terms at booking) | LOAN_ID |
-| 4 | loan_monthly | one loan × month-end | LOAN_ID, SNAPSHOT_DATE |
-| 5 | customer_monthly | one customer × month-end | CUSTOMER_ID, SNAPSHOT_DATE |
-| 6 | crb_monthly | one customer × month-end | CUSTOMER_ID, SNAPSHOT_DATE |
-| 7 | macro_monthly | one month-end | SNAPSHOT_DATE |
-| 8 | sector_monthly | one sector × month-end | SECTOR, SNAPSHOT_DATE |
-| 9 | _truth_customer_monthly | one customer × month-end | CUSTOMER_ID, SNAPSHOT_DATE |
+| # | Table | Grain (one row =) | Primary key | Generated in |
+|---|---|---|---|---|
+| 1 | relationship_managers | one RM | RM_ID | Lesson 6 ✅ |
+| 2 | customers | one customer | CUSTOMER_ID | Lesson 6 ✅ |
+| 3 | loans | one loan (terms at booking) | LOAN_ID | Lesson 7 ✅ |
+| 4 | loan_monthly | one loan × month-end | LOAN_ID, SNAPSHOT_DATE | Lesson 7 ✅ (arrears columns in Lesson 9) |
+| 5 | customer_monthly | one customer × month-end | CUSTOMER_ID, SNAPSHOT_DATE | Lesson 8 |
+| 6 | crb_monthly | one customer × month-end | CUSTOMER_ID, SNAPSHOT_DATE | Lesson 8 |
+| 7 | macro_monthly | one month-end | SNAPSHOT_DATE | Lesson 8 |
+| 8 | sector_monthly | one sector × month-end | SECTOR, SNAPSHOT_DATE | Lesson 8 |
+| 9 | _truth_customer_monthly | one customer × month-end | CUSTOMER_ID, SNAPSHOT_DATE | Lesson 8 |
 
 How they connect: one RM → many customers; one customer → many loans;
 one loan → many monthly rows; one customer → many monthly behaviour and CRB rows.
@@ -56,30 +57,33 @@ PK: `RM_ID`
 |---|---|---|---|---|
 | RM_ID | text | RM001–RM040 | KEY | RM identifier |
 | RM_NAME | text | fictitious names | OPERATIONAL | RM full name |
-| RM_EMAIL | text | `...@example.com` | OPERATIONAL | Where alert emails go (fictitious domain) |
+| RM_EMAIL | text | `...@example.com` | OPERATIONAL | Where alert emails go (reserved domain: can never reach a real inbox) |
 | BRANCH | text | branch list | OPERATIONAL | RM's branch |
-| REGION | text | Nairobi, Central, Coast, Rift Valley, Western, Nyanza, Eastern | OPERATIONAL | RM's region |
+| REGION | text | Nairobi, Central, Coast, Rift Valley, Western, Nyanza, Eastern | OPERATIONAL | RM's region (every region has at least one RM) |
 
 ## 2. customers — one row per customer
-PK: `CUSTOMER_ID` · FK: `RM_ID` → relationship_managers
+PK: `CUSTOMER_ID` · FK: `RM_ID` → relationship_managers (RM is in the customer's region)
 
 | Column | Type | Valid values / range | Class | Meaning |
 |---|---|---|---|---|
 | CUSTOMER_ID | text | C000001–C005000 | KEY | Customer identifier |
 | RM_ID | text | must exist in relationship_managers | KEY | Assigned RM |
-| SEGMENT | text | "250", "270" | STATIC | CSME business segment at onboarding (a code, NOT a number) |
+| SEGMENT | text | "250", "270" | STATIC | CSME business segment at onboarding (a code, NOT a number: read as text) |
 | SECTOR | text | Trade, Agriculture, Transport, Manufacturing, Services, Construction, Hospitality | STATIC | Business sector |
 | BUSINESS_TYPE | text | Sole proprietor, Partnership, Limited company | STATIC | Legal form |
 | REGION | text | as RM regions | STATIC | Business location region |
-| TOWN | text | town list | STATIC | Business town |
+| TOWN | text | town list (always inside REGION) | STATIC | Business town |
 | AGE | integer | 21–75 | PROTECTED | Owner/main director age at Jan 2023 |
 | GENDER | text | M, F | PROTECTED | Owner/main director gender |
-| | CUSTOMER_SINCE | date | 2005-01-01 to 2023-01-31 | STATIC | Relationship start date (all customers exist at the first snapshot) |start date |
-| BUSINESS_YEARS | integer | 0–40 | STATIC | Years the business has operated (at Jan 2023) |
-| DECLARED_MONTHLY_INCOME | number (KES) | > 0 | STATIC | Income declared at onboarding |
+| CUSTOMER_SINCE | date | 2005-01-01 to 2023-01-31 | STATIC | Relationship start date (all customers exist at the first snapshot) |
+| BUSINESS_YEARS | integer | 0–40 | STATIC | Years the business has operated at Jan 2023 (≥ relationship years) |
+| DECLARED_MONTHLY_INCOME | number (KES) | > 0 (right-skewed) | STATIC | Income declared at onboarding |
 
 ## 3. loans — one row per loan (terms at booking)
-PK: `LOAN_ID` · FK: `CUSTOMER_ID` → customers
+PK: `LOAN_ID` · FK: `CUSTOMER_ID` → customers · FK: `REFINANCED_FROM_LOAN_ID` → loans
+
+Products are either **instalment** (ASSET_FINANCE, MORTGAGE, UNSECURED_BL: fixed EMI, tenor, maturity)
+or **revolving** (OVERDRAFT, CREDIT_CARD, MOBILE_LOAN: a limit; no tenor, EMI or maturity).
 
 | Column | Type | Valid values / range | Class | Meaning |
 |---|---|---|---|---|
@@ -88,30 +92,35 @@ PK: `LOAN_ID` · FK: `CUSTOMER_ID` → customers
 | PRODUCT | text | ASSET_FINANCE, MORTGAGE, UNSECURED_BL, OVERDRAFT, CREDIT_CARD, MOBILE_LOAN | STATIC | Product type |
 | SECURED_FLAG | integer | 0, 1 | STATIC | 1 = secured (asset finance, mortgage) |
 | BOOKING_DATE | date | 2015-01-01 to 2025-12-31 | STATIC | Date the loan was booked |
-| LOAN_AMOUNT | number (KES) | > 0 | STATIC | Amount disbursed, or limit for overdrafts/cards |
-| INTEREST_RATE | number (%) | 9–36 | STATIC | Annual interest rate |
-| TENOR_MONTHS | integer | 1–240 (blank for overdrafts/cards) | STATIC | Contractual term |
-| EMI | number (KES) | ≥ 0 | STATIC | Scheduled monthly instalment |
+| LOAN_AMOUNT | number (KES) | ≥ 5,000 | STATIC | Amount disbursed (instalment) or LIMIT (revolving: overdraft, card, mobile loan) |
+| INTEREST_RATE | number (%) | 12–36 | STATIC | Annual interest rate |
+| TENOR_MONTHS | integer | 12–240 (blank for revolving products) | STATIC | Contractual term |
+| EMI | number (KES) | > 0 instalment; 0 revolving | STATIC | Scheduled monthly instalment (annuity formula) |
 | REPAYMENT_FREQUENCY | text | MONTHLY | STATIC | Repayment frequency |
-| MATURITY_DATE | date | after BOOKING_DATE | STATIC | Contractual end date |
-| REFINANCED_FROM_LOAN_ID | text | blank, or an existing LOAN_ID | STATIC | The old loan this one replaced (top-up/refinance) |
+| MATURITY_DATE | date | after BOOKING_DATE (blank for revolving) | STATIC | Contractual end date |
+| REFINANCED_FROM_LOAN_ID | text | blank, or an existing LOAN_ID | STATIC | The old loan this one replaced (top-up/refinance, same month) |
 
 ## 4. loan_monthly — one row per loan per month-end
 PK: `LOAN_ID, SNAPSHOT_DATE` · FK: `LOAN_ID` → loans
 
+> A loan has a row for every month-end from booking until (and including) the month it closes.
+> Lesson 7 generates MOB, OUTSTANDING_BALANCE, LIMIT_UTILISATION, ACCOUNT_STATUS (ACTIVE/CLOSED)
+> and CLOSURE_REASON (PAID_OFF, MATURED, REFINANCED). DPD, ARREARS_AMOUNT, MISSED_INSTALMENT_FLAG,
+> RESTRUCTURED_FLAG and the RESTRUCTURED / WRITTEN_OFF statuses are added in Lesson 9.
+
 | Column | Type | Valid values / range | Class | Meaning |
 |---|---|---|---|---|
 | LOAN_ID | text | must exist in loans | KEY | Loan |
-| SNAPSHOT_DATE | date | month-ends 2023-01-31 to 2025-12-31 | KEY | Extraction ("as at") date |
-| MOB | integer | ≥ 0 | AS_OF | Months on book at the snapshot |
-| OUTSTANDING_BALANCE | number (KES) | ≥ 0 | AS_OF | Balance owed |
-| LIMIT_UTILISATION | number | 0–1.5 (overdrafts/cards only; blank otherwise) | AS_OF | Balance ÷ limit |
-| DPD | integer | 0–360 | AS_OF | Days past due at the snapshot |
-| ARREARS_AMOUNT | number (KES) | ≥ 0 | AS_OF | Overdue amount |
-| MISSED_INSTALMENT_FLAG | integer | 0, 1 | AS_OF | Instalment missed this month |
-| RESTRUCTURED_FLAG | integer | 0, 1 | AS_OF | Loan restructured this month (DPD resets afterwards) |
-| ACCOUNT_STATUS | text | ACTIVE, RESTRUCTURED, CLOSED, WRITTEN_OFF | AS_OF | Status at the snapshot |
-| CLOSURE_REASON | text | blank, PAID_OFF, MATURED, REFINANCED, WRITTEN_OFF | AS_OF | Why the loan closed (only in its closing month) |
+| SNAPSHOT_DATE | date | month-ends 2023-01-31 to 2025-12-31 (not before booking) | KEY | Extraction ("as at") date |
+| MOB | integer | ≥ 0, rises by 1 each month | AS_OF | Months on book at the snapshot |
+| OUTSTANDING_BALANCE | number (KES) | ≥ 0 (0 in the closing month) | AS_OF | Balance owed |
+| LIMIT_UTILISATION | number | 0–1.5 (revolving only; blank for instalment) | AS_OF | Balance ÷ limit |
+| DPD | integer | 0–360 | AS_OF | Days past due at the snapshot *(Lesson 9)* |
+| ARREARS_AMOUNT | number (KES) | ≥ 0 | AS_OF | Overdue amount *(Lesson 9)* |
+| MISSED_INSTALMENT_FLAG | integer | 0, 1 | AS_OF | Instalment missed this month *(Lesson 9)* |
+| RESTRUCTURED_FLAG | integer | 0, 1 | AS_OF | Loan restructured this month; DPD resets afterwards *(Lesson 9)* |
+| ACCOUNT_STATUS | text | ACTIVE, CLOSED (+ RESTRUCTURED, WRITTEN_OFF in Lesson 9) | AS_OF | Status at the snapshot |
+| CLOSURE_REASON | text | blank, PAID_OFF, MATURED, REFINANCED (+ WRITTEN_OFF in Lesson 9) | AS_OF | Why the loan closed (only in its closing month) |
 
 ## 5. customer_monthly — one row per customer per month-end (account behaviour and products)
 PK: `CUSTOMER_ID, SNAPSHOT_DATE` · FK: `CUSTOMER_ID` → customers
@@ -204,6 +213,7 @@ PK: `CUSTOMER_ID, SNAPSHOT_DATE`
 | Worst DPD at the snapshot > 5 | Not in population: excluded |
 
 All future values used here are **TARGET_SOURCE**: used for the label only, never as features.
+Refinancing is followed at **customer** level: the replacement loan's DPD counts for the same customer.
 
 ## Built later (not generated directly)
 
@@ -217,12 +227,13 @@ All future values used here are **TARGET_SOURCE**: used for the label only, neve
 |---|---|
 | Delinquency | MAX_DPD_1M/3M/6M/12M, AVG_DPD_3M, DPD_TREND_6M, MONTHS_SINCE_LAST_DPD |
 | Payment stress | UNPAID_COUNT_3M/12M, UNPAID_AMOUNT_RATIO, FIRST_INSTALMENT_DEFAULT_FLAG, MISSED_EMI_COUNT_6M |
-| Affordability | LOAN_TO_INCOME, TOTAL_COMMITMENTS_TO_INCOME, CARD_UTILISATION, NO_OF_ACTIVE_LOANS |
+| Affordability | LOAN_TO_INCOME, INSTALMENT_TO_INCOME (active loans only), TOTAL_COMMITMENTS_TO_INCOME, CARD_UTILISATION, NO_OF_ACTIVE_LOANS |
+| Revolving use | OD/card/mobile UTILISATION now, UTILISATION_TREND_3M/6M, MONTHS_ABOVE_90PCT_UTIL |
 | Cash flow | CTO/DTO quarterly values and slopes, % change vs 6-month average, turnover volatility, months with no credits |
 | Balances | AVG_BALANCE_3M/12M, BALANCE_VOLATILITY, BALANCE_TREND, NEG_MONTHS_6M |
 | Bureau | CRB_SCORE, CRB_SCORE_CHANGE, ENQUIRIES_6M, OTHER_LENDER_NPL, TU_ON_OFF_FREQUENCY |
-| Products | PPC (product count), HAS_ASSET_FINANCE, HAS_MORTGAGE, HAS_UNSECURED_BL, HAS_OD, HAS_CARD |
-| History | MIN_MOB, HISTORY_MONTHS_AVAILABLE, RESTRUCTURED_EVER, MONTHS_SINCE_RESTRUCTURE |
+| Products | PPC (product count), HAS_ASSET_FINANCE, HAS_MORTGAGE, HAS_UNSECURED_BL, HAS_OD, HAS_CARD, HAS_MOBILE_LOAN |
+| History | MIN_MOB, HISTORY_MONTHS_AVAILABLE, REFINANCED_EVER, RESTRUCTURED_EVER, MONTHS_SINCE_RESTRUCTURE |
 | Context | macro and sector stress, seasonality (month of year) |
 
 ## Real-source mapping (for the rebuild on real CSME data)
@@ -234,7 +245,7 @@ All future values used here are **TARGET_SOURCE**: used for the label only, neve
 |---|---|---|
 | relationship_managers | RM / portfolio allocation list | Real RM emails only inside the bank |
 | customers | KE_Customer_Master; customer static details | Filter BUSINESS_SEGMENT IN ('250','270') |
-| loans | KE_Accounts_List / KE_Accounts_Master (PRODUCT_LINE = 'LENDING'); EMI file | Map CATEGORY codes to PRODUCT |
+| loans | KE_Accounts_List / KE_Accounts_Master (PRODUCT_LINE = 'LENDING'); EMI file | Map CATEGORY codes to PRODUCT; revolving vs instalment |
 | loan_monthly | STG_AA_ARREARS, STG_AA_BILL_ARREARS; accounts master balances and status | LEFT JOIN arrears: no arrears row ≠ missing customer |
 | customer_monthly | KE_ACCOUNT_TRANSACTIONS (DTO, CTO, unpaid codes); STG_AVERAGE_BALANCE; deposit and card PPC queries; monthly segment | Same transaction-code exclusions as the notebook |
 | crb_monthly | LEND_FOR_ALL_CRB (latest LOAD_DATE ≤ snapshot); TU on/off | SCORE, ENQUIRIES30/90DAYS, SCHEDULEDPAYMENTAMT, PASTDUEAMOUNT, NONPERFORMING, MOBILE_* |
