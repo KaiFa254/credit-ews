@@ -38,4 +38,6 @@ This is a *delinquency* target, not default (default means 90+ DPD).
 - [X] Lesson 2 — Dependencies
 - [x] Lesson 3 — Folder structure and config.yaml (grain: customer × month)
 - [x] Lesson 4 — ews package, config loader, verification script, first tests (6 passing)
-- [ ] Stage 2 — Synthetic data generation
+- [x] Stage 2 — Synthetic data: RMs, customers, loans, monthly behaviour, CRB, macro, sector,
+      hidden health, DPD paths, target, planted data issues (56 tests passing; bad rate ≈ 5.8%)
+- [ ] Stage 3 — Data understanding and EDA
